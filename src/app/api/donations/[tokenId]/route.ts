@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { RpcProvider, hash, num } from "starknet";
 
-const STARKNET_RPC_URL =
-  process.env.NEXT_PUBLIC_RPC_URL || "https://starknet-sepolia.public.blastapi.io";
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "";
-
-// Event key for DonationReceived
-const DONATION_EVENT_KEY = hash.getSelectorFromName("DonationReceived");
+const APTOS_NODE_URL =
+  process.env.NEXT_PUBLIC_APTOS_NODE_URL || "https://fullnode.testnet.aptoslabs.com/v1";
+const MODULE_ADDRESS = process.env.NEXT_PUBLIC_MODULE_ADDRESS || "";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * GET /api/donations/[tokenId]
+ * Fetches donation events for a specific NFT from the Aptos module events.
+ */
 export async function GET(
   request: Request,
   { params }: { params: { tokenId: string } }
@@ -20,49 +20,44 @@ export async function GET(
       return NextResponse.json({ error: "Invalid token ID" }, { status: 400 });
     }
 
-    if (!CONTRACT_ADDRESS) {
-      return NextResponse.json({ error: "Contract address not configured" }, { status: 500 });
+    if (!MODULE_ADDRESS) {
+      return NextResponse.json({ error: "Module address not configured" }, { status: 500 });
     }
 
-    const provider = new RpcProvider({ nodeUrl: STARKNET_RPC_URL });
+    // Fetch donation events from the Aptos module's DonationEvents handle
+    const eventsUrl = `${APTOS_NODE_URL}/accounts/${MODULE_ADDRESS}/events/${MODULE_ADDRESS}::nft_donation::DonationEvents/events?limit=100`;
 
-    // Fetch events from StarkNet using getEvents
-    const eventsResponse = await provider.getEvents({
-      address: CONTRACT_ADDRESS,
-      keys: [[DONATION_EVENT_KEY]],
-      from_block: { block_number: 0 },
-      to_block: "latest",
-      chunk_size: 100,
-    });
+    const eventsRes = await fetch(eventsUrl);
 
+    if (!eventsRes.ok) {
+      // If events resource doesn't exist yet, return empty
+      if (eventsRes.status === 404) {
+        return NextResponse.json([]);
+      }
+      const txt = await eventsRes.text();
+      console.error("Failed to fetch events:", eventsRes.status, txt);
+      return NextResponse.json({ error: "Failed to fetch events" }, { status: 502 });
+    }
+
+    const events = await eventsRes.json();
+
+    // Filter events for the requested tokenId
     const donations: Array<{
       donor: string;
       amount: string;
-      blockNumber: number;
-      transactionHash: string;
+      timestamp: string;
+      sequenceNumber: string;
     }> = [];
 
-    for (const event of eventsResponse.events) {
-      // DonationReceived event keys: [event_selector, donor, token_id_low, token_id_high]
-      // DonationReceived event data: [amount_low, amount_high]
-      if (event.keys.length >= 4 && event.data.length >= 2) {
-        const eventTokenIdLow = num.toBigInt(event.keys[2]);
-        const eventTokenIdHigh = num.toBigInt(event.keys[3]);
-        const eventTokenId = eventTokenIdLow + (eventTokenIdHigh << 128n);
-
-        if (Number(eventTokenId) === tokenId) {
-          const donor = event.keys[1]; // donor address
-          const amountLow = num.toBigInt(event.data[0]);
-          const amountHigh = num.toBigInt(event.data[1]);
-          const amount = amountLow + (amountHigh << 128n);
-
-          donations.push({
-            donor,
-            amount: amount.toString(),
-            blockNumber: event.block_number ?? 0,
-            transactionHash: event.transaction_hash,
-          });
-        }
+    for (const event of events) {
+      const data = event.data;
+      if (data && parseInt(data.token_id) === tokenId) {
+        donations.push({
+          donor: data.donor,
+          amount: data.amount,
+          timestamp: data.timestamp,
+          sequenceNumber: event.sequence_number,
+        });
       }
     }
 

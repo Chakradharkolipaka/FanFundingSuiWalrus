@@ -10,8 +10,8 @@ import { useToast } from "@/components/ui/use-toast";
 import Confetti from "react-confetti";
 import { Loader2, ExternalLink } from "lucide-react";
 import { useDonate } from "@/hooks/useDonate";
-import { shortenAddress, formatEth, parseEth } from "@/lib/starknet";
-import { VOYAGER_BASE_URL, DONATION_TOKEN_SYMBOL } from "@/constants";
+import { shortenAddress, formatEth, parseEth, explorerTxUrl, explorerAccountUrl } from "@/lib/starknet";
+import { DONATION_TOKEN_SYMBOL } from "@/constants";
 
 import type { NftData } from "@/hooks/useNFTs";
 
@@ -41,15 +41,15 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
     if (!donationAmount || parseFloat(donationAmount) <= 0) {
       toast({
         title: "Invalid Amount",
-        description: "Please enter a valid donation amount in STRK.",
+        description: `Please enter a valid donation amount in ${DONATION_TOKEN_SYMBOL}.`,
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const amountWei = parseEth(donationAmount);
-      donate(tokenId, amountWei);
+      const amountOctas = parseEth(donationAmount);
+      donate(tokenId, amountOctas);
     } catch {
       toast({
         title: "Invalid Amount",
@@ -87,7 +87,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
           <p className="text-sm text-muted-foreground truncate">{metadata?.description}</p>
           {typeof owner === "string" && owner && (
             <a
-              href={`${VOYAGER_BASE_URL}/contract/${owner}`}
+              href={explorerAccountUrl(owner)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-1"
@@ -117,7 +117,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                   Your support helps the creator. Enter the amount of {DONATION_TOKEN_SYMBOL} you&apos;d like to donate.
                   <br />
                   <span className="text-xs mt-1 block">
-                    💡 On StarkNet, this sends an ERC-20 {DONATION_TOKEN_SYMBOL} transfer via multicall (approve + donate in one tx).
+                    💡 On Aptos, this sends a native APT transfer via the smart contract.
                   </span>
                 </DialogDescription>
               </DialogHeader>
@@ -125,14 +125,14 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                 <div>
                   <Input
                     type="number"
-                    placeholder="0.01"
-                    step="0.001"
+                    placeholder="0.1"
+                    step="0.01"
                     min="0"
                     value={donationAmount}
                     onChange={(e) => setDonationAmount(e.target.value)}
                     disabled={isDonating}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Amount in {DONATION_TOKEN_SYMBOL} (e.g. 0.01)</p>
+                  <p className="text-xs text-muted-foreground mt-1">Amount in {DONATION_TOKEN_SYMBOL} (e.g. 0.1)</p>
                 </div>
                 <Button
                   onClick={handleDonate}
@@ -152,7 +152,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                     <p>
                       Tx:{" "}
                       <a
-                        href={`${VOYAGER_BASE_URL}/tx/${txHash}`}
+                        href={explorerTxUrl(txHash)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline"
@@ -164,23 +164,23 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                 )}
 
                 <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                  <h4 className="text-xs font-semibold text-muted-foreground">💧 Need testnet STRK?</h4>
+                  <h4 className="text-xs font-semibold text-muted-foreground">💧 Need testnet APT?</h4>
                   <div className="flex flex-wrap gap-2">
                     <a
-                      href="https://starknet-faucet.vercel.app/"
+                      href="https://www.aptosfaucet.com/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-primary hover:underline"
                     >
-                      StarkNet Faucet ↗
+                      Aptos Faucet ↗
                     </a>
                     <a
-                      href="https://blastapi.io/faucets/starknet-sepolia-eth"
+                      href="https://explorer.aptoslabs.com/faucet?network=testnet"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-primary hover:underline"
                     >
-                      Blast Faucet ↗
+                      Explorer Faucet ↗
                     </a>
                   </div>
                 </div>

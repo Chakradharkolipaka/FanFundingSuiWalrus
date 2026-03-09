@@ -1,60 +1,26 @@
-import abi from "../../contracts/starknet_abi.json";
+// ─── Aptos Configuration ────────────────────────────────────────────
 
-/** StarkNet contract address — set via NEXT_PUBLIC_CONTRACT_ADDRESS env var */
-export const contractAddress: string | undefined = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+/** Module address on Aptos — set via NEXT_PUBLIC_MODULE_ADDRESS env var */
+export const MODULE_ADDRESS: string = process.env.NEXT_PUBLIC_MODULE_ADDRESS || "";
 
-/** Sierra ABI for the NFTDonation cairo contract */
-export const contractAbi = abi;
+/** Module name as published on-chain */
+export const MODULE_NAME = "nft_donation";
 
-/** STRK ERC-20 contract on StarkNet (same on mainnet & sepolia) — used for donations */
-export const STRK_TOKEN_ADDRESS =
-  "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+/** Full module identifier for entry / view function calls */
+export const MODULE_ID = `${MODULE_ADDRESS}::${MODULE_NAME}` as const;
 
-/** ETH ERC-20 contract on StarkNet (same on mainnet & sepolia) */
-export const ETH_TOKEN_ADDRESS =
-  "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+/** Aptos fullnode URL (testnet) */
+export const APTOS_NODE_URL: string =
+  process.env.NEXT_PUBLIC_APTOS_NODE_URL || "https://fullnode.testnet.aptoslabs.com/v1";
 
-/** The token used for donations (STRK) */
-export const DONATION_TOKEN_ADDRESS = STRK_TOKEN_ADDRESS;
-export const DONATION_TOKEN_SYMBOL = "STRK";
+/** Aptos explorer base URL (testnet) */
+export const EXPLORER_BASE_URL = "https://explorer.aptoslabs.com";
 
-/** Minimal ERC-20 ABI for approve / balance_of calls */
-export const ERC20_ABI = [
-  {
-    type: "function",
-    name: "approve",
-    inputs: [
-      { name: "spender", type: "core::starknet::contract_address::ContractAddress" },
-      { name: "amount", type: "core::integer::u256" },
-    ],
-    outputs: [{ type: "core::bool" }],
-    state_mutability: "external",
-  },
-  {
-    type: "function",
-    name: "balance_of",
-    inputs: [
-      { name: "account", type: "core::starknet::contract_address::ContractAddress" },
-    ],
-    outputs: [{ type: "core::integer::u256" }],
-    state_mutability: "view",
-  },
-  {
-    type: "function",
-    name: "transfer_from",
-    inputs: [
-      { name: "sender", type: "core::starknet::contract_address::ContractAddress" },
-      { name: "recipient", type: "core::starknet::contract_address::ContractAddress" },
-      { name: "amount", type: "core::integer::u256" },
-    ],
-    outputs: [{ type: "core::bool" }],
-    state_mutability: "external",
-  },
-] as const;
+/** Shorthand used in the UI */
+export const DONATION_TOKEN_SYMBOL = "APT";
 
-/** StarkNet Sepolia network config */
-export const STARKNET_CHAIN_ID = "SN_SEPOLIA";
-export const STARKNET_RPC_URL =
-  process.env.NEXT_PUBLIC_RPC_URL || "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_7/t_rhMdgBYIyrHkpDdOkWo";
-export const VOYAGER_BASE_URL = "https://sepolia.voyager.online";
-export const STARKSCAN_BASE_URL = "https://sepolia.starkscan.co";
+/** Number of decimals for APT (Octas → APT = 10^8) */
+export const APT_DECIMALS = 8;
+
+/** Network label shown in the UI */
+export const NETWORK_NAME = "Aptos Testnet";

@@ -7,8 +7,8 @@ import NFTCard from "@/components/NFTCard";
 import SkeletonCard from "@/components/SkeletonCard";
 import { Button } from "@/components/ui/button";
 import { useNFTs } from "@/hooks/useNFTs";
-import { formatEth, shortenAddress } from "@/lib/starknet";
-import { VOYAGER_BASE_URL, contractAddress, DONATION_TOKEN_SYMBOL } from "@/constants";
+import { formatEth, shortenAddress, explorerAccountUrl, explorerTxUrl } from "@/lib/starknet";
+import { MODULE_ADDRESS, DONATION_TOKEN_SYMBOL, EXPLORER_BASE_URL } from "@/constants";
 import { ExternalLink } from "lucide-react";
 
 export default function Home() {
@@ -62,16 +62,16 @@ export default function Home() {
           </h1>
           <p className="text-muted-foreground max-w-xl text-sm md:text-base">
             Discover NFTs, support creators, and track the most supported drops — powered
-            by <span className="font-semibold text-primary">StarkNet</span>.
+            by <span className="font-semibold text-primary">Aptos</span>.
           </p>
-          {contractAddress && (
+          {MODULE_ADDRESS && (
             <a
-              href={`${VOYAGER_BASE_URL}/contract/${contractAddress}`}
+              href={explorerAccountUrl(MODULE_ADDRESS)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2 hover:text-primary transition-colors"
             >
-              Contract: {shortenAddress(contractAddress)} <ExternalLink className="h-3 w-3" />
+              Module: {shortenAddress(MODULE_ADDRESS)} <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>
@@ -98,36 +98,28 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
           <div>
-            <p className="text-sm font-medium">StarkNet Sepolia Testnet</p>
+            <p className="text-sm font-medium">Aptos Testnet</p>
             <p className="text-xs text-muted-foreground">
-              Wallets: ArgentX • Braavos | Fee token: STRK
+              Wallet: Petra | Fee token: APT
             </p>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
           <a
-            href="https://starknet-faucet.vercel.app/"
+            href="https://www.aptosfaucet.com/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs px-3 py-1 rounded-full border bg-background hover:bg-accent transition-all duration-200 hover:scale-105"
           >
-            💧 Get Testnet STRK
+            💧 Get Testnet APT
           </a>
           <a
-            href="https://www.argent.xyz/argent-x/"
+            href="https://petra.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs px-3 py-1 rounded-full border bg-background hover:bg-accent transition-all duration-200 hover:scale-105"
           >
-            🦊 ArgentX Wallet
-          </a>
-          <a
-            href="https://braavos.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs px-3 py-1 rounded-full border bg-background hover:bg-accent transition-all duration-200 hover:scale-105"
-          >
-            🛡️ Braavos Wallet
+            🦋 Petra Wallet
           </a>
         </div>
       </section>
@@ -175,40 +167,40 @@ export default function Home() {
           </div>
 
           <div className="rounded-2xl border bg-card dark:bg-gradient-to-br dark:from-slate-900/80 dark:to-slate-800/80 p-6 transition-all duration-300 hover:shadow-lg">
-            <h2 className="text-xl font-semibold mb-1">About StarkNet</h2>
+            <h2 className="text-xl font-semibold mb-1">About Aptos</h2>
             <p className="text-sm text-muted-foreground mb-4">
               Key info about the network powering this platform.
             </p>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Network</span>
-                <span className="font-medium">StarkNet Sepolia (Testnet)</span>
+                <span className="font-medium">Aptos Testnet</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Consensus</span>
-                <span className="font-medium">STARK Proofs (ZK-Rollup)</span>
+                <span className="font-medium">AptosBFT (DiemBFT v4)</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Smart Contract</span>
-                <span className="font-medium">Cairo 2.x</span>
+                <span className="font-medium">Move Language</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Account Model</span>
-                <span className="font-medium">Native Account Abstraction</span>
+                <span className="font-medium">Resource-Based</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Donation Method</span>
-                <span className="font-medium">Multicall (approve+donate)</span>
+                <span className="font-medium">Native APT Transfer</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-background/60 p-3">
                 <span className="text-muted-foreground">Block Explorer</span>
                 <a
-                  href={VOYAGER_BASE_URL}
+                  href={EXPLORER_BASE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-primary hover:underline flex items-center gap-1"
                 >
-                  Voyager <ExternalLink className="h-3 w-3" />
+                  Aptos Explorer <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
             </div>
@@ -234,7 +226,7 @@ export default function Home() {
           ) : (
             <div className="col-span-full text-center py-10">
               <p className="mb-4 text-muted-foreground">
-                No NFTs found yet. Be the first to mint and support a cause on StarkNet.
+                No NFTs found yet. Be the first to mint and support a cause on Aptos.
               </p>
               <Button asChild className="transition-all duration-200 hover:scale-105 hover:shadow-lg">
                 <Link href="/mint">Mint an NFT</Link>

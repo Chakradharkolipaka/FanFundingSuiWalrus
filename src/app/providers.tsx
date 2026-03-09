@@ -1,29 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { sepolia } from "@starknet-react/chains";
-import {
-  StarknetConfig,
-  publicProvider,
-  argent,
-  braavos,
-  useInjectedConnectors,
-} from "@starknet-react/core";
+import { PetraWalletProvider } from "@/lib/wallet";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const { connectors } = useInjectedConnectors({
-    recommended: [argent(), braavos()],
-    includeRecommended: "onlyIfNoConnectors",
-    order: "alphabetical",
-  });
-
   return (
-    <StarknetConfig
-      chains={[sepolia]}
-      provider={publicProvider()}
-      connectors={connectors}
-    >
+    <PetraWalletProvider>
       {children}
-    </StarknetConfig>
+    </PetraWalletProvider>
   );
 }

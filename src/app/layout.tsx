@@ -11,8 +11,8 @@ import BottomNav from "@/components/BottomNav";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Fan Funding | StarkNet",
-  description: "Decentralized fan funding platform on StarkNet — mint NFTs and support creators with STRK.",
+  title: "Fan Funding | Aptos",
+  description: "Decentralized fan funding platform on Aptos — mint NFTs and support creators with APT.",
 };
 
 export default function RootLayout({

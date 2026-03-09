@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Contract } from "starknet";
-import { contractAddress, contractAbi } from "@/constants";
-import { getProvider, toU256BigInt } from "@/lib/starknet";
+import { MODULE_ADDRESS, MODULE_NAME, APTOS_NODE_URL } from "@/constants";
 
 export interface NftData {
   tokenId: number;
@@ -13,8 +11,28 @@ export interface NftData {
 }
 
 /**
- * Hook to fetch all NFTs from the StarkNet contract.
- * Reads total_supply, then batch-fetches token_uri, owner_of, get_total_donations.
+ * Call a Move view function via the Aptos REST API.
+ */
+async function viewFunction(functionId: string, args: string[] = [], typeArgs: string[] = []): Promise<any[]> {
+  const res = await fetch(`${APTOS_NODE_URL}/view`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      function: functionId,
+      type_arguments: typeArgs,
+      arguments: args,
+    }),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`View function failed (${res.status}): ${txt}`);
+  }
+  return res.json();
+}
+
+/**
+ * Hook to fetch all NFTs from the Aptos contract.
+ * Reads total_supply via view function, then batch-fetches token details.
  */
 export function useNFTs() {
   const [nfts, setNfts] = useState<NftData[]>([]);
@@ -23,7 +41,8 @@ export function useNFTs() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchNFTs = useCallback(async () => {
-    if (!contractAddress) {
+    if (!MODULE_ADDRESS) {
+      console.warn("MODULE_ADDRESS not set — skipping NFT fetch");
       setIsLoading(false);
       return;
     }
@@ -32,12 +51,11 @@ export function useNFTs() {
       setIsLoading(true);
       setError(null);
 
-      const provider = getProvider();
-      const contract = new Contract(contractAbi, contractAddress, provider);
-
       // 1. Get total supply
-      const supplyResult = await contract.call("total_supply");
-      const supply = Number(toU256BigInt(supplyResult));
+      const [supplyRaw] = await viewFunction(
+        `${MODULE_ADDRESS}::${MODULE_NAME}::total_supply`
+      );
+      const supply = Number(supplyRaw);
       setTotalSupply(supply);
 
       if (supply === 0) {
@@ -46,27 +64,27 @@ export function useNFTs() {
         return;
       }
 
-      // 2. Fetch data for each token
+      // 2. Fetch each token in parallel
       const nftPromises = Array.from({ length: supply }, async (_, i) => {
         const tokenId = i + 1;
         try {
-          const [uriResult, ownerResult, donationsResult] = await Promise.all([
-            contract.call("get_token_uri", [{ low: tokenId, high: 0 }]),
-            contract.call("owner_of", [{ low: tokenId, high: 0 }]),
-            contract.call("get_total_donations", [{ low: tokenId, high: 0 }]),
-          ]);
+          const result = await viewFunction(
+            `${MODULE_ADDRESS}::${MODULE_NAME}::get_token`,
+            [tokenId.toString()]
+          );
 
-          // Parse token URI (ByteArray from Cairo)
-          const tokenUri = typeof uriResult === "string" ? uriResult : String(uriResult);
-          const owner = typeof ownerResult === "string"
-            ? ownerResult
-            : "0x" + BigInt(ownerResult as any).toString(16);
-          const totalDonations = toU256BigInt(donationsResult);
+          // get_token returns: (creator, name, description, token_uri, total_funded, created_at)
+          const [creator, , , tokenUri, totalFunded] = result as [
+            string, string, string, string, string, string
+          ];
 
-          // Fetch metadata from IPFS
+          const owner = creator;
+          const totalDonations = BigInt(totalFunded);
+
+          // Fetch IPFS metadata
           let metadata: Record<string, any> = {};
           try {
-            const res = await fetch(tokenUri);
+            const res = await fetch(String(tokenUri));
             metadata = await res.json();
           } catch {
             console.warn(`Failed to fetch metadata for token ${tokenId}`);

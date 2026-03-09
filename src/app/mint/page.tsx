@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { useAccount } from "@starknet-react/core";
+import { useWallet } from "@/lib/wallet";
 import { useMintNFT } from "@/hooks/useMintNFT";
 import { Loader2, Upload, ExternalLink, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
-import { VOYAGER_BASE_URL } from "@/constants";
+import { explorerTxUrl } from "@/lib/starknet";
 
 export default function MintPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -20,7 +20,7 @@ export default function MintPage() {
   const [description, setDescription] = useState("");
   const { toast } = useToast();
 
-  const { address, isConnected } = useAccount();
+  const { connected, address } = useWallet();
   const { mint, isUploading, isMinting, isConfirming, isConfirmed, isProcessing, txHash } = useMintNFT();
 
   const handleFileChange = (files: FileList | null) => {
@@ -53,10 +53,10 @@ export default function MintPage() {
       return;
     }
 
-    if (!isConnected || !address) {
+    if (!connected || !address) {
       toast({
         title: "Wallet Not Connected",
-        description: "Please connect your StarkNet wallet (ArgentX or Braavos) first.",
+        description: "Please connect your Petra wallet first.",
         variant: "destructive",
       });
       return;
@@ -91,7 +91,7 @@ export default function MintPage() {
             <CardTitle className="text-3xl font-bold text-center">Create Your NFT</CardTitle>
             <CardDescription className="text-center">
               Upload your artwork and mint it as a unique NFT on{" "}
-              <span className="font-semibold text-primary">StarkNet</span>.
+              <span className="font-semibold text-primary">Aptos</span>.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -180,10 +180,9 @@ export default function MintPage() {
             </div>
 
             {/* Wallet warnings */}
-            {!isConnected && (
+            {!connected && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm text-yellow-800 dark:text-yellow-200 transition-all duration-300">
-                ⚠️ Please connect your StarkNet wallet (ArgentX or Braavos) using the button in the
-                navigation bar.
+                ⚠️ Please connect your Petra wallet using the button in the navigation bar.
               </div>
             )}
 
@@ -192,7 +191,7 @@ export default function MintPage() {
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm text-green-800 dark:text-green-200">
                 🎉 Transaction:{" "}
                 <a
-                  href={`${VOYAGER_BASE_URL}/tx/${txHash}`}
+                  href={explorerTxUrl(txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono hover:underline inline-flex items-center gap-1"
@@ -204,7 +203,7 @@ export default function MintPage() {
 
             <Button
               onClick={handleMint}
-              disabled={isProcessing || !isConnected}
+              disabled={isProcessing || !connected}
               className="w-full transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg"
             >
               {isUploading ? (
@@ -217,34 +216,34 @@ export default function MintPage() {
                 </>
               ) : isConfirming ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirming on StarkNet...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirming on Aptos...
                 </>
               ) : (
-                "Mint NFT on StarkNet"
+                "Mint NFT on Aptos"
               )}
             </Button>
 
             {/* Faucet info */}
             <div className="rounded-lg border bg-muted/30 p-3 space-y-1 text-xs text-muted-foreground">
-              <p className="font-semibold">💡 First time on StarkNet Sepolia?</p>
+              <p className="font-semibold">💡 First time on Aptos Testnet?</p>
               <p>
-                You need testnet STRK for gas fees. Get some from{" "}
+                You need testnet APT for gas fees. Get some from{" "}
                 <a
-                  href="https://starknet-faucet.vercel.app/"
+                  href="https://www.aptosfaucet.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  StarkNet Faucet ↗
+                  Aptos Faucet ↗
                 </a>{" "}
                 or{" "}
                 <a
-                  href="https://blastapi.io/faucets/starknet-sepolia-eth"
+                  href="https://explorer.aptoslabs.com/faucet?network=testnet"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  Blast Faucet ↗
+                  Explorer Faucet ↗
                 </a>
               </p>
             </div>

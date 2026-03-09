@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
+import { useWallet } from "@/lib/wallet";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,24 +16,22 @@ import { Wallet, LogOut, ExternalLink, Copy, Check } from "lucide-react";
 import { shortenAddress } from "@/lib/starknet";
 
 export default function ConnectWallet() {
-  const { address, isConnected, status } = useAccount();
-  const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
+  const { connect, disconnect, address, connected, connecting, isPetraInstalled } = useWallet();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleConnect = async (connector: any) => {
+  const handleConnect = async () => {
     try {
       toast({
         title: "🔗 Connecting Wallet...",
-        description: `Connecting via ${connector.name}. Please approve in your wallet.`,
+        description: "Connecting via Petra. Please approve in your wallet.",
       });
-      connect({ connector });
+      await connect();
       setOpen(false);
       toast({
         title: "✅ Wallet Connected",
-        description: "Your StarkNet wallet is now connected!",
+        description: "Your Aptos wallet is now connected!",
       });
     } catch (err: any) {
       toast({
@@ -61,7 +59,7 @@ export default function ConnectWallet() {
     }
   };
 
-  if (isConnected && address) {
+  if (connected && address) {
     return (
       <div className="flex items-center gap-2">
         <Button
@@ -98,52 +96,37 @@ export default function ConnectWallet() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl">Connect StarkNet Wallet</DialogTitle>
+          <DialogTitle className="text-xl">Connect Aptos Wallet</DialogTitle>
           <DialogDescription>
-            Choose a wallet to connect to the StarkNet network.
+            Choose a wallet to connect to the Aptos network.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 mt-4">
-          {connectors.map((connector) => (
-            <Button
-              key={connector.id}
-              variant="outline"
-              className="w-full justify-start gap-3 h-14 text-left transition-all duration-200 ease-in-out hover:scale-[1.02] hover:shadow-md hover:border-primary/50"
-              onClick={() => handleConnect(connector)}
-            >
-              {connector.icon && (
-                <img
-                  src={typeof connector.icon === 'string' ? connector.icon : connector.icon.dark || ''}
-                  alt={connector.name}
-                  className="h-7 w-7 rounded"
-                />
-              )}
-              <div className="flex flex-col">
-                <span className="font-medium">{connector.name}</span>
-                <span className="text-xs text-muted-foreground">Click to connect</span>
-              </div>
-            </Button>
-          ))}
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-3 h-14 text-left transition-all duration-200 ease-in-out hover:scale-[1.02] hover:shadow-md hover:border-primary/50"
+            onClick={handleConnect}
+            disabled={connecting}
+          >
+            <span className="text-2xl">🦋</span>
+            <div className="flex flex-col">
+              <span className="font-medium">
+                {connecting ? "Connecting..." : isPetraInstalled ? "Petra Wallet" : "Install Petra Wallet"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {isPetraInstalled ? "Click to connect" : "Opens petra.app in a new tab"}
+              </span>
+            </div>
+          </Button>
         </div>
 
         <div className="mt-6 rounded-lg border bg-muted/50 p-4 space-y-2">
           <h4 className="text-sm font-semibold">🔑 Supported Wallets</h4>
           <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center justify-between">
-              <span>🦊 ArgentX</span>
+              <span>� Petra Wallet</span>
               <a
-                href="https://www.argent.xyz/argent-x/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline flex items-center gap-1"
-              >
-                Install <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>🛡️ Braavos</span>
-              <a
-                href="https://braavos.app/"
+                href="https://petra.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline flex items-center gap-1"
@@ -153,39 +136,28 @@ export default function ConnectWallet() {
             </div>
           </div>
 
-          <h4 className="text-sm font-semibold pt-2">💧 StarkNet Sepolia Faucets</h4>
+          <h4 className="text-sm font-semibold pt-2">💧 Aptos Testnet Faucets</h4>
           <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center justify-between">
-              <span>StarkNet Faucet</span>
+              <span>Aptos Faucet</span>
               <a
-                href="https://starknet-faucet.vercel.app/"
+                href="https://www.aptosfaucet.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline flex items-center gap-1"
               >
-                Get STRK <ExternalLink className="h-3 w-3" />
+                Get APT <ExternalLink className="h-3 w-3" />
               </a>
             </div>
             <div className="flex items-center justify-between">
-              <span>Blast Faucet</span>
+              <span>Explorer Faucet</span>
               <a
-                href="https://blastapi.io/faucets/starknet-sepolia-eth"
+                href="https://explorer.aptoslabs.com/faucet?network=testnet"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline flex items-center gap-1"
               >
-                Get STRK <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Alchemy Faucet</span>
-              <a
-                href="https://www.alchemy.com/faucets/starknet-sepolia"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline flex items-center gap-1"
-              >
-                Get STRK <ExternalLink className="h-3 w-3" />
+                Get APT <ExternalLink className="h-3 w-3" />
               </a>
             </div>
           </div>
