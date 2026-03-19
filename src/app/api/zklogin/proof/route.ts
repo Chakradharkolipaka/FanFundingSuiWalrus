@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { decodeJwt } from "jose";
+import { getZkLoginProverProvider } from "@/lib/zklogin/providers";
 
 export const runtime = "nodejs";
 
@@ -23,76 +24,42 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const proverUrl = process.env.ZKLOGIN_PROVER_URL || DEFAULT_ZKLOGIN_PROVER_URL_TESTNET;
-
     const decoded: any = decodeJwt(jwt);
     const jwtExp = typeof decoded?.exp === "number" ? decoded.exp : undefined;
 
-    // Mysten prover expects JWT + eph pk + maxEpoch + randomness.
-    // We don’t send any server secrets.
-    let proverRes: Response;
+    const provider = getZkLoginProverProvider(process.env);
+
+    // Back-compat:
+    // - If user didn't configure ZKLOGIN_PROVER_URL, keep the historical default.
+    // - This default only applies to the docker-like provider.
+    if (provider.name === "docker" && !process.env.ZKLOGIN_PROVER_URL) {
+      process.env.ZKLOGIN_PROVER_URL = DEFAULT_ZKLOGIN_PROVER_URL_TESTNET;
+    }
+
     try {
-      proverRes = await fetch(proverUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jwt,
-          extendedEphemeralPublicKey: ephemeralPublicKey,
-          maxEpoch,
-          jwtRandomness: randomness,
-        }),
+      const { zkProof, addressSeed } = await provider.prove({
+        jwt,
+        ephemeralPublicKey,
+        randomness,
+        maxEpoch,
+      });
+
+      return NextResponse.json({
+        provider: provider.name,
+        zkProof,
+        addressSeed,
+        jwtExp,
       });
     } catch (e: any) {
-      // Common: DNS failures (ENOTFOUND), blocked domains, corporate proxies, etc.
-      const cause = e?.cause;
+      // Keep previous behavior of returning a 502 for prover upstream issues.
       return NextResponse.json(
         {
-          error: "Failed to reach zkLogin prover endpoint",
-          proverUrl,
-          details: {
-            message: e?.message ?? String(e),
-            code: e?.code,
-            cause: cause
-              ? {
-                  message: cause?.message,
-                  code: cause?.code,
-                  errno: cause?.errno,
-                  syscall: cause?.syscall,
-                  hostname: cause?.hostname,
-                }
-              : undefined,
-          },
+          error: e?.message ?? "Prover failed",
+          provider: provider.name,
         },
         { status: 502 }
       );
     }
-
-    if (!proverRes.ok) {
-      const text = await proverRes.text().catch(() => "");
-      return NextResponse.json(
-        { error: `Prover error: ${proverRes.status} ${text.slice(0, 200)}` },
-        { status: 502 }
-      );
-    }
-
-    const payload = await proverRes.json();
-
-    // Common response fields are zkProof + addressSeed (names can vary by prover).
-    const zkProof = payload.zkProof ?? payload.proof ?? payload;
-    const addressSeed = payload.addressSeed ?? payload.address_seed;
-
-    if (!zkProof || addressSeed === undefined) {
-      return NextResponse.json(
-        { error: "Prover response missing zkProof/addressSeed", proverResponse: payload },
-        { status: 502 }
-      );
-    }
-
-    return NextResponse.json({
-      zkProof,
-      addressSeed,
-      jwtExp,
-    });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? String(e) }, { status: 500 });
   }
