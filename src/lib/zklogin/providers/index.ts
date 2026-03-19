@@ -4,6 +4,10 @@ import type { ZkLoginProverProvider } from "./types";
 
 export type ProverProviderMode = "docker" | "enoki" | "auto";
 
+// Default hosted prover (Mysten-maintained) for testnet/dev usage.
+// This keeps the app functional even if ZKLOGIN_PROVER_URL isn't configured.
+const DEFAULT_ZKLOGIN_PROVER_URL_TESTNET = "https://prover.testnet.sui.io/v1";
+
 export function getZkLoginProverProvider(env: NodeJS.ProcessEnv): ZkLoginProverProvider {
   const mode = (env.ZKLOGIN_PROVER_PROVIDER as ProverProviderMode | undefined) ?? "auto";
 
@@ -24,5 +28,6 @@ export function getZkLoginProverProvider(env: NodeJS.ProcessEnv): ZkLoginProverP
     return createEnokiProverProvider({ apiBaseUrl: enokiBase, apiKey: enokiKey });
   }
 
-  return createDockerProverProvider({ proverUrl: dockerUrl });
+  // If ZKLOGIN_PROVER_URL isn't set, use the Mysten-hosted default for testnet.
+  return createDockerProverProvider({ proverUrl: dockerUrl || DEFAULT_ZKLOGIN_PROVER_URL_TESTNET });
 }

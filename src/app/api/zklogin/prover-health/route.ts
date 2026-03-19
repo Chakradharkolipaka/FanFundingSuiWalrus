@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getZkLoginProverProvider } from "@/lib/zklogin/providers";
 
 export const runtime = "nodejs";
 
@@ -95,9 +96,15 @@ export async function GET() {
   const reachable = results.filter((r) => r.ok);
   const best = reachable.sort((a, b) => (a.latencyMs ?? 0) - (b.latencyMs ?? 0))[0];
 
+  const provider = getZkLoginProverProvider(process.env);
+
   return NextResponse.json({
     env: {
       configuredProverUrl: process.env.ZKLOGIN_PROVER_URL ?? null,
+      configuredProvider: process.env.ZKLOGIN_PROVER_PROVIDER ?? "auto",
+      selectedProvider: provider.name,
+      enokiConfigured: Boolean(process.env.ENOKI_API_KEY && process.env.ENOKI_API_BASE_URL),
+      suiNetwork: process.env.SUI_NETWORK ?? null,
       note: "This endpoint probes candidate zkLogin prover URLs from the current runtime.",
     },
     best: best ?? null,

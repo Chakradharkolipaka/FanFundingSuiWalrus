@@ -1,5 +1,15 @@
 import type { ProverInput, ProverOutput, ZkLoginProverProvider } from "./types";
 
+type SuiNetwork = "testnet" | "devnet" | "mainnet";
+
+function normalizeSuiNetwork(raw: string | undefined): SuiNetwork {
+  const v = (raw ?? "").trim().toLowerCase();
+  if (v === "mainnet") return "mainnet";
+  if (v === "devnet") return "devnet";
+  // default
+  return "testnet";
+}
+
 /**
  * Enoki-based prover provider.
  *
@@ -13,6 +23,7 @@ export function createEnokiProverProvider(opts: {
 }): ZkLoginProverProvider {
   const base = opts.apiBaseUrl.replace(/\/+$/, "");
   const timeoutMs = opts.timeoutMs ?? 30_000;
+  const network = normalizeSuiNetwork(process.env.SUI_NETWORK);
 
   return {
     name: "enoki",
@@ -39,6 +50,7 @@ export function createEnokiProverProvider(opts: {
           },
           signal: ac.signal,
           body: JSON.stringify({
+            network,
             ephemeralPublicKey: input.ephemeralPublicKey,
             randomness: input.randomness,
             maxEpoch: input.maxEpoch,
