@@ -120,7 +120,7 @@ export default function Home() {
         </div>
         <div className="flex gap-2 flex-wrap">
           <a
-            href="https://discord.gg/sui"
+            href="https://faucet.n1stake.com/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs px-3 py-1 rounded-full border bg-background hover:bg-accent transition-all duration-200 hover:scale-105"

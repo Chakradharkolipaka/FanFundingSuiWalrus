@@ -17,6 +17,8 @@ A decentralized fan funding platform built on **Sui** where creators can mint NF
 
 ## 💧 Testnet Faucet
 
+Web faucet: https://faucet.n1stake.com/
+
 ```bash
 sui client faucet
 ```

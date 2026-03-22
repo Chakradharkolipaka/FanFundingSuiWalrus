@@ -202,13 +202,13 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                 <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
                   <h4 className="text-xs font-semibold text-muted-foreground">💧 Need testnet SUI?</h4>
                   <div className="flex flex-wrap gap-2">
-                    <a
-                      href="https://discord.gg/sui"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Discord Faucet ↗
+                      <a
+                        href="https://faucet.n1stake.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Web Faucet ↗
                     </a>
                     <span className="text-xs text-muted-foreground">
                       or run: <code className="font-mono">sui client faucet</code>

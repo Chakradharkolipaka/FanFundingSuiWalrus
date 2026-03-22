@@ -202,8 +202,8 @@ export default function ConnectWallet() {
           <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center justify-between">
               <span>Discord Faucet</span>
-              <a
-                href="https://discord.gg/sui"
+                    <a
+                      href="https://faucet.n1stake.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline flex items-center gap-1"

@@ -22,9 +22,8 @@ export default function WalletlessAccountCard({ hideWhenWalletConnected = false 
   const [copied, setCopied] = useState(false);
 
   const faucetUrl = useMemo(() => {
-    // Reliable faucet entry-point for most users.
-    // (Sui Discord has the testnet faucet channel.)
-    return "https://discord.gg/sui";
+    // Testnet faucet (web UI)
+    return "https://faucet.n1stake.com/";
   }, []);
 
   if (!zk?.address) return null;

@@ -119,7 +119,7 @@ export default function MintPage() {
                     </span>
                   </div>
                 ))}
-              </div>
+                          Web Faucet
             )}
 
             {/* Image Upload */}
@@ -232,12 +232,12 @@ export default function MintPage() {
               <p>
                 You need testnet SUI for gas fees. Get some from the{" "}
                 <a
-                  href="https://discord.gg/sui"
+                  href="https://faucet.n1stake.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  Sui Discord ↗
+                  Web Faucet ↗
                 </a>{" "}
                 or run{" "}
                 <code className="font-mono bg-muted px-1 rounded">sui client faucet</code> in your
