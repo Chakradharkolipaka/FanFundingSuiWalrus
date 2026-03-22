@@ -36,9 +36,13 @@ export default function AuthModal({ trigger }: Props) {
         const init = await initZkLogin(client as any);
         if (cancelled) return;
 
-        // Store ephemeral secret in sessionStorage (private material not persisted long-term)
-        const secretB64 = exportEphemeralKeypairSecret(init.ephemeralKeypair);
-        window.sessionStorage.setItem("fanfunding:zklogin-ephemeral-secret:v1", secretB64);
+  // Store ephemeral secret *seed* (32 bytes) in sessionStorage (private material not persisted long-term).
+  // Different SDK versions may encode more than 32 bytes in getSecretKey(); we normalize to the 32-byte seed
+  // so signing is deterministic and matches the ephemeralPublicKey used for the proof.
+  const secretB64 = exportEphemeralKeypairSecret(init.ephemeralKeypair);
+  const decoded = Buffer.from(secretB64, "base64");
+  const seedB64 = Buffer.from(decoded.subarray(0, 32)).toString("base64");
+  window.sessionStorage.setItem("fanfunding:zklogin-ephemeral-secret:v1", seedB64);
 
         // Stash init payload in memory for the next step.
         window.sessionStorage.setItem(
