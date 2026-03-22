@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 import { ConnectButton, useSuiClient } from "@mysten/dapp-kit";
 import { initZkLogin, exportEphemeralKeypairSecret } from "@/lib/zklogin/zkLoginClient";
-import { saveZkLoginSession } from "@/lib/zklogin/zkLoginSession";
+import { clearZkLoginSession, saveZkLoginSession } from "@/lib/zklogin/zkLoginSession";
 import { decodeJwt } from "jose";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -44,8 +44,7 @@ export default function AuthModal({ trigger }: Props) {
   const seedB64 = Buffer.from(decoded.subarray(0, 32)).toString("base64");
   // Keep in sessionStorage for backwards-compat/debug...
   window.sessionStorage.setItem("fanfunding:zklogin-ephemeral-secret:v1", seedB64);
-  // ...and also persist in the zkLogin session so signing works immediately and reliably.
-  // This avoids races where sessionStorage might not be read in time on the first action.
+  // We also persist this seed into the saved zkLogin session during `handleJwt`.
 
         // Stash init payload in memory for the next step.
         window.sessionStorage.setItem(
@@ -103,13 +102,33 @@ export default function AuthModal({ trigger }: Props) {
           throw new Error(err?.error || `Prover failed (${resp.status})`);
         }
 
-        const { zkProof, addressSeed } = (await resp.json()) as any;
+  const { zkProof, addressSeed } = (await resp.json()) as any;
 
-  // Derive address client-side.
-  // The helper handles extracting iss/sub/aud from JWT and computing the address.
-  const address = jwtToAddress(jwt, BigInt(addressSeed));
+        // Derive address client-side.
+        // The helper handles extracting iss/sub/aud from JWT and computing the address.
+        const address = jwtToAddress(jwt, BigInt(addressSeed));
 
-        const seedB64 = window.sessionStorage.getItem("fanfunding:zklogin-ephemeral-secret:v1") || undefined;
+        const seedB64 =
+          window.sessionStorage.getItem("fanfunding:zklogin-ephemeral-secret:v1") || undefined;
+
+        // --- Self-healing guard ---
+        // If the ephemeral seed isn't present, we can't sign transactions. If we proceed, users will hit
+        // "Invalid user signature / Required Signature absent". Instead, clear everything and force re-login.
+        if (!seedB64) {
+          clearZkLoginSession();
+          window.sessionStorage.removeItem("fanfunding:zklogin-ephemeral-secret:v1");
+          window.sessionStorage.removeItem("fanfunding:zklogin-init:v1");
+          throw new Error("zkLogin session incomplete. Please sign in again.");
+        }
+
+        // Defensive: make sure address derivation is stable.
+        const normalized = String(address).toLowerCase();
+        if (!normalized.startsWith("0x") || normalized.length < 10) {
+          clearZkLoginSession();
+          window.sessionStorage.removeItem("fanfunding:zklogin-ephemeral-secret:v1");
+          window.sessionStorage.removeItem("fanfunding:zklogin-init:v1");
+          throw new Error("zkLogin address derivation failed. Please sign in again.");
+        }
 
         saveZkLoginSession({
           provider: "google",
