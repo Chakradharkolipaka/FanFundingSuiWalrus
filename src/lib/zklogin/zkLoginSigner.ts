@@ -29,10 +29,20 @@ export class ZkLoginSigner {
   }
 
   async signAndExecuteTransaction(tx: Transaction): Promise<{ digest: string }> {
+    // Ensure sender is set (required for correct intent + signature verification).
+    tx.setSenderIfNotSet?.(this.session.address);
+    // For SDK versions where Transaction doesn't have setSenderIfNotSet.
+    if (!(tx as any).sender) {
+      tx.setSender(this.session.address);
+    }
+
     // Build BCS bytes for signing.
     const txBytes = await tx.build({ client: this.client });
 
-  const keypair = Ed25519Keypair.fromSecretKey(this.session.ephemeralSecretKey);
+    // The ephemeral secret key is stored as a base64 string by `Ed25519Keypair#getSecretKey()`.
+    // `fromSecretKey` expects raw bytes, not the base64 string.
+    const secretBytes = Buffer.from(this.session.ephemeralSecretKey, "base64");
+    const keypair = Ed25519Keypair.fromSecretKey(secretBytes);
     const { signature: userSignature } = await keypair.signTransaction(txBytes);
 
     const zkSig = getZkLoginSignature({
