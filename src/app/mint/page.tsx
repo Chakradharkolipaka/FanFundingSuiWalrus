@@ -119,7 +119,7 @@ export default function MintPage() {
                     </span>
                   </div>
                 ))}
-                          Web Faucet
+              </div>
             )}
 
             {/* Image Upload */}
