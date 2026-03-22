@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { useWallet } from "@/lib/wallet";
 import { useMintNFT } from "@/hooks/useMintNFT";
+import { useSigner } from "@/hooks/useSigner";
 import { Loader2, Upload, ExternalLink, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { explorerTxUrl } from "@/lib/sui-utils";
@@ -20,7 +20,7 @@ export default function MintPage() {
   const [description, setDescription] = useState("");
   const { toast } = useToast();
 
-  const { connected, address } = useWallet();
+  const signer = useSigner();
   const { mint, isUploading, isMinting, isConfirming, isConfirmed, isProcessing, txHash } =
     useMintNFT();
 
@@ -54,10 +54,10 @@ export default function MintPage() {
       return;
     }
 
-    if (!connected || !address) {
+    if (!signer?.address) {
       toast({
-        title: "Wallet Not Connected",
-        description: "Please connect your Sui wallet first.",
+        title: "Not Signed In",
+        description: "Please sign in with Google (zkLogin) or connect your Sui wallet.",
         variant: "destructive",
       });
       return;
@@ -183,9 +183,9 @@ export default function MintPage() {
             </div>
 
             {/* Wallet warnings */}
-            {!connected && (
+            {!signer?.address && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm text-yellow-800 dark:text-yellow-200 transition-all duration-300">
-                ⚠️ Please connect your Sui wallet using the button in the navigation bar.
+                ⚠️ Please sign in with Google (zkLogin) or connect your Sui wallet using the buttons in the navigation bar.
               </div>
             )}
 
@@ -206,7 +206,7 @@ export default function MintPage() {
 
             <Button
               onClick={handleMint}
-              disabled={isProcessing || !connected}
+              disabled={isProcessing || !signer?.address}
               className="w-full transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-lg"
             >
               {isUploading ? (

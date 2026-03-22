@@ -33,7 +33,7 @@ export default function WalletlessAccountCard({ hideWhenWalletConnected = false 
   if (hideWhenWalletConnected) return null;
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-cyan-500/5 to-teal-500/5">
+    <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-cyan-500/5 to-teal-500/5 transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-[1px]">
       <CardHeader>
         <CardTitle>Walletless account (Google zkLogin)</CardTitle>
         <CardDescription>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { clearZkLoginSession, loadZkLoginSession } from "@/lib/zklogin/zkLoginSession";
+import { clearZkLoginSession } from "@/lib/zklogin/zkLoginSession";
+import { useZkLoginSession } from "@/lib/zklogin/useZkLoginSession";
 import { useWallet } from "@/lib/wallet";
 
 function shortAddr(addr: string) {
@@ -13,7 +14,7 @@ function shortAddr(addr: string) {
 export default function UserProfileMenu() {
   const wallet = useWallet();
   const [open, setOpen] = useState(false);
-  const zk = useMemo(() => loadZkLoginSession(), [open]);
+  const zk = useZkLoginSession();
 
   const address = wallet.connected ? wallet.address : zk?.address;
   const email = zk?.email;

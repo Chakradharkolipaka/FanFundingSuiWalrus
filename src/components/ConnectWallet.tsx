@@ -201,9 +201,9 @@ export default function ConnectWallet() {
           <h4 className="text-sm font-semibold pt-2">Sui Testnet Faucets</h4>
           <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center justify-between">
-              <span>Discord Faucet</span>
-                    <a
-                      href="https://faucet.n1stake.com/"
+              <span>Web Faucet</span>
+              <a
+                href="https://faucet.n1stake.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline flex items-center gap-1"
