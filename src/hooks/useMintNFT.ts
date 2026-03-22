@@ -101,6 +101,9 @@ export function useMintNFT() {
         const encoder = new TextEncoder();
         const tx = new Transaction();
 
+  // Important for zkLogin (and sometimes wallet kit): ensure the transaction has an explicit sender.
+  tx.setSender(signer.address);
+
         tx.moveCall({
           target: `${PACKAGE_ID}::${MODULE_NAME}::mint_nft`,
           arguments: [

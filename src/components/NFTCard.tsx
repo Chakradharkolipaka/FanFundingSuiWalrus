@@ -144,9 +144,11 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                 Fan Donate
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-xl">
               <DialogHeader>
-                <DialogTitle>Fan Donate to {metadata?.name || `NFT #${tokenId}`}</DialogTitle>
+                <DialogTitle className="bg-gradient-to-r from-primary to-cyan-500 bg-clip-text text-transparent">
+                  Fan Donate to {metadata?.name || `NFT #${tokenId}`}
+                </DialogTitle>
                 <DialogDescription>
                   Your support helps the creator. Enter the amount of {DONATION_TOKEN_SYMBOL} you&apos;d like to donate.
                   <br />
@@ -165,6 +167,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                     value={donationAmount}
                     onChange={(e) => setDonationAmount(e.target.value)}
                     disabled={isDonating}
+                    className="transition-all duration-200 focus:shadow-md"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Amount in {DONATION_TOKEN_SYMBOL} (e.g. 0.1 = 100,000,000 MIST)
@@ -206,7 +209,7 @@ export default function NFTCard({ nft, onDonation, onTotalsChange }: NFTCardProp
                         href="https://faucet.n1stake.com/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline"
+                        className="text-xs text-primary hover:underline transition-all duration-200 hover:translate-y-[-1px]"
                       >
                         Web Faucet ↗
                     </a>

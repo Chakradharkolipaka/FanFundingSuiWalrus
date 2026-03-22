@@ -59,6 +59,9 @@ export function useDonate() {
 
         const tx = new Transaction();
 
+  // Important for zkLogin (and sometimes wallet kit): ensure the transaction has an explicit sender.
+  tx.setSender(signer.address);
+
         // Split gas coin to create a Coin<SUI> with the donation amount
         const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(amountMist)]);
 

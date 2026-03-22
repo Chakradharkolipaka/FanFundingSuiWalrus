@@ -59,7 +59,9 @@ export default function Home() {
       <section className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
-            Explore Impact NFTs
+            <span className="inline-block bg-gradient-to-r from-primary via-cyan-500 to-emerald-500 bg-clip-text text-transparent transition-all duration-300 hover:brightness-110">
+              Explore Impact NFTs
+            </span>
           </h1>
           <p className="text-muted-foreground max-w-xl text-sm md:text-base">
             Discover NFTs, support creators, and track the most supported drops — powered
@@ -70,7 +72,7 @@ export default function Home() {
               href={explorerObjectUrl(PACKAGE_ID)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2 hover:text-primary transition-colors"
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2 hover:text-primary transition-all duration-200 hover:translate-y-[-1px]"
             >
               Package: {shortenAddress(PACKAGE_ID)} <ExternalLink className="h-3 w-3" />
             </a>
@@ -80,7 +82,7 @@ export default function Home() {
               href={explorerObjectUrl(COLLECTION_ID)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2 ml-4 hover:text-primary transition-colors"
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground mt-2 ml-4 hover:text-primary transition-all duration-200 hover:translate-y-[-1px]"
             >
               Collection: {shortenAddress(COLLECTION_ID)} <ExternalLink className="h-3 w-3" />
             </a>
