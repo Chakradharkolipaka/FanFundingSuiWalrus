@@ -50,6 +50,7 @@ export function clearZkLoginSession() {
 export function clearAllZkLoginState() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem("fanfunding:zklogin-ephemeral-secret-seed:v1");
   window.sessionStorage.removeItem("fanfunding:zklogin-ephemeral-secret:v1");
   window.sessionStorage.removeItem("fanfunding:zklogin-init:v1");
   emitChanged();

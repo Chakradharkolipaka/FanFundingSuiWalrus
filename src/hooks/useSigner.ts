@@ -31,8 +31,13 @@ export function useSigner(): UnifiedSigner | null {
         (typeof window !== "undefined"
           ? window.sessionStorage.getItem("fanfunding:zklogin-ephemeral-secret:v1")
           : null);
+      const secretStable =
+        secret ||
+        (typeof window !== "undefined"
+          ? window.localStorage.getItem("fanfunding:zklogin-ephemeral-secret-seed:v1")
+          : null);
 
-      if (!secret || !session.ephemeralPublicKey) {
+      if (!secretStable || !session.ephemeralPublicKey) {
         // IMPORTANT UX FIX:
         // Don't clear an otherwise-valid session here. Clearing makes the UI lose the walletless address card
         // immediately after login on refresh/navigation (because sessionStorage can be wiped by the browser).
@@ -49,6 +54,7 @@ export function useSigner(): UnifiedSigner | null {
             clearZkLoginSession();
             if (typeof window !== "undefined") {
               window.sessionStorage.removeItem("fanfunding:zklogin-ephemeral-secret:v1");
+              window.localStorage.removeItem("fanfunding:zklogin-ephemeral-secret-seed:v1");
             }
           },
         };
@@ -56,7 +62,7 @@ export function useSigner(): UnifiedSigner | null {
 
       // Validate invariants early: derived extended pubkey from the seed must match what the prover used.
       try {
-        const decoded = Buffer.from(secret, "base64");
+  const decoded = Buffer.from(secretStable, "base64");
         const seedBytes = decoded.length === 32 ? decoded : decoded.subarray(0, 32);
         if (seedBytes.length !== 32) throw new Error(`Invalid seed size: ${decoded.length}`);
 
@@ -79,7 +85,7 @@ export function useSigner(): UnifiedSigner | null {
         maxEpoch: session.maxEpoch,
         addressSeed: session.addressSeed!,
         zkProof: session.zkProof as any,
-        ephemeralSecretKey: secret,
+        ephemeralSecretKey: secretStable,
         ephemeralPublicKey: session.ephemeralPublicKey,
       });
 
@@ -91,6 +97,7 @@ export function useSigner(): UnifiedSigner | null {
           clearZkLoginSession();
           if (typeof window !== "undefined") {
             window.sessionStorage.removeItem("fanfunding:zklogin-ephemeral-secret:v1");
+            window.localStorage.removeItem("fanfunding:zklogin-ephemeral-secret-seed:v1");
           }
         },
       };

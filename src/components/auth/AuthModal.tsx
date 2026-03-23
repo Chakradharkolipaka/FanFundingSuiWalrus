@@ -83,7 +83,10 @@ export default function AuthModal({ trigger }: Props) {
   const seedB64 = Buffer.from(decoded.subarray(0, 32)).toString("base64");
   // Keep in sessionStorage for backwards-compat/debug...
   window.sessionStorage.setItem("fanfunding:zklogin-ephemeral-secret:v1", seedB64);
-  // We also persist this seed into the saved zkLogin session during `handleJwt`.
+  // Also persist to localStorage so the walletless signer remains functional across refresh/navigation.
+  // This is required for an "error-free" walletless UX (otherwise mint/donate randomly breaks when
+  // sessionStorage gets cleared by the browser).
+  window.localStorage.setItem("fanfunding:zklogin-ephemeral-secret-seed:v1", seedB64);
 
         // Stash init payload in memory for the next step.
         window.sessionStorage.setItem(
@@ -152,7 +155,9 @@ export default function AuthModal({ trigger }: Props) {
         const address = jwtToAddress(jwt, BigInt(addressSeed));
 
         const seedB64 =
-          window.sessionStorage.getItem("fanfunding:zklogin-ephemeral-secret:v1") || undefined;
+          window.sessionStorage.getItem("fanfunding:zklogin-ephemeral-secret:v1") ||
+          window.localStorage.getItem("fanfunding:zklogin-ephemeral-secret-seed:v1") ||
+          undefined;
 
         // --- Self-healing guard ---
         // If the ephemeral seed isn't present, we can't sign transactions. If we proceed, users will hit
