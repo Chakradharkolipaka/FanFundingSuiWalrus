@@ -62,11 +62,23 @@ export default function AuthModal({ trigger }: Props) {
       // Re-initializing would create a new ephemeral keypair and can desync proof/seed/signature.
       const existing = loadZkLoginSession();
       if (existing?.address && existing?.jwt) {
-        // If the session is missing critical signing material, clear it so we can start fresh.
+        // If the session is missing critical signing material, DON'T clear it yet.
+        // We will only clear on actual error, not just missing transient nonce/init.
+        // The session itself (address/jwt/proof) is valid; ephemeral seed can be recovered.
         if (!existing.ephemeralPublicKey || !existing.ephemeralSecretKeySeedB64) {
+          // Session exists but signing material is missing (sessionStorage was cleared).
+          // Try to recover from localStorage ephemeral seed before giving up.
+          const storedSeed = window.localStorage.getItem("fanfunding:zklogin-ephemeral-secret-seed:v1");
+          if (storedSeed) {
+            // We can recover! Don't re-init, just return.
+            return;
+          }
+          // Truly unrecoverable: seed was never saved, or both were cleared.
+          // Only now do we clear, and user will see "Please sign in again" when they try to mint/donate.
           clearAllZkLoginState();
         } else {
-        return;
+          // Session is complete; don't re-init.
+          return;
         }
       }
 

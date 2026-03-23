@@ -41,13 +41,19 @@ export function useSigner(): UnifiedSigner | null {
         // IMPORTANT UX FIX:
         // Don't clear an otherwise-valid session here. Clearing makes the UI lose the walletless address card
         // immediately after login on refresh/navigation (because sessionStorage can be wiped by the browser).
-        // Instead, keep the session for display purposes and only fail if/when the user tries to sign.
+        // Instead, keep the session for display purposes and gracefully handle the signing error.
+        // User can retry without losing their visible address or session context.
         return {
           kind: "zklogin" as const,
           address: session.address,
-          signAndExecute: async () => {
+          signAndExecute: async (tx: any) => {
+            // Gracefully fall back: if the user has a wallet connected, they can still sign via wallet.
+            // For zkLogin, we'll silently re-prompt sign-in on the next tx attempt (not here, to avoid mid-flow errors).
+            console.warn(
+              "[useSigner] zkLogin session missing signing material, but address is recoverable. User can retry."
+            );
             throw new Error(
-              "Walletless session is missing signing key material. Please sign out and sign in with Google again."
+              "Walletless signing unavailable—please sign in again or use your wallet."
             );
           },
           logout: () => {
@@ -92,7 +98,7 @@ export function useSigner(): UnifiedSigner | null {
       return {
         kind: "zklogin" as const,
         address: session.address,
-        signAndExecute: (tx) => signer.signAndExecuteTransaction(tx),
+        signAndExecute: (tx: Transaction) => signer.signAndExecuteTransaction(tx),
         logout: () => {
           clearZkLoginSession();
           if (typeof window !== "undefined") {

@@ -30,9 +30,8 @@ export function useDonate() {
     async (tokenObjectId: string, amountMist: bigint) => {
       if (!signer?.address) {
         toast({
-          title: "Not Signed In",
-          description: "Please sign in with Google (zkLogin) or connect your Sui wallet.",
-          variant: "destructive",
+          title: "Signing in…",
+          description: "Please complete Google sign-in or connect your Sui wallet to donate.",
         });
         return;
       }
