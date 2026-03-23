@@ -5,6 +5,7 @@ const EVENT_NAME = "fanfunding:zklogin-session-changed";
 
 function emitChanged() {
   if (typeof window === "undefined") return;
+  console.log("[zkLoginSession] Emitting session change event:", EVENT_NAME);
   window.dispatchEvent(new Event(EVENT_NAME));
 }
 
@@ -31,6 +32,7 @@ export function loadZkLoginSession(): ZkLoginSession | null {
 
 export function saveZkLoginSession(session: ZkLoginSession) {
   if (typeof window === "undefined") return;
+  console.log("[zkLoginSession] Saving session:", session.address, session.jwt?.substring(0, 20) + "...");
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   emitChanged();
 }
