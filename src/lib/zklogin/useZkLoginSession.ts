@@ -16,11 +16,23 @@ export function useZkLoginSession(): ZkLoginSession | null {
   });
 
   useEffect(() => {
+    // Subscribe to session changes FIRST
     const unsub = subscribeZkLoginSessionChanged(() => {
-      console.log("[useZkLoginSession] Session changed event received");
-      setSession(loadZkLoginSession());
+      console.log("[useZkLoginSession] Session changed event received, reloading...");
+      const updated = loadZkLoginSession();
+      console.log("[useZkLoginSession] After reload:", updated?.address ?? "none");
+      setSession(updated);
     });
+
+    // Also check immediately in case session was changed before we subscribed
+    const currentSession = loadZkLoginSession();
+    if (currentSession?.address && (!session || session.address !== currentSession.address)) {
+      console.log("[useZkLoginSession] Session found after effect init:", currentSession.address);
+      setSession(currentSession);
+    }
+
     return unsub;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return session;
