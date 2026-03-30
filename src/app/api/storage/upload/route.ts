@@ -60,6 +60,11 @@ function isAuthAllowed(req: Request) {
   return actual === expected;
 }
 
+function isWalrusFallbackEnabled() {
+  // default ON for operational resilience in test/demo environments
+  return String(process.env.STORAGE_WALRUS_FALLBACK_TO_PINATA || "true").toLowerCase() !== "false";
+}
+
 export async function POST(req: Request) {
   const traceId = getTraceId();
   const startedAt = Date.now();
@@ -104,12 +109,40 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = await uploadWithProvider(provider, {
-      file,
-      name,
-      description,
-      traceId,
-    });
+    let result;
+    try {
+      result = await uploadWithProvider(provider, {
+        file,
+        name,
+        description,
+        traceId,
+      });
+    } catch (e: any) {
+      const shouldFallback =
+        provider === "walrus" &&
+        isWalrusFallbackEnabled() &&
+        !!process.env.PINATA_JWT &&
+        (e instanceof StorageProviderError
+          ? e.retryable || e.statusCode >= 500
+          : String(e?.message || "").toLowerCase().includes("resolve host"));
+
+      if (!shouldFallback) {
+        throw e;
+      }
+
+      console.warn(
+        `[storage.upload] traceId=${traceId} provider=walrus status=fallback reason=${String(
+          e?.message || "unknown"
+        ).slice(0, 200)}`
+      );
+
+      result = await uploadWithProvider("pinata", {
+        file,
+        name,
+        description,
+        traceId,
+      });
+    }
 
     const durationMs = Date.now() - startedAt;
     console.info(
