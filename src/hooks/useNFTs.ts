@@ -152,7 +152,7 @@ export function useNFTs() {
           const totalFunded = BigInt(fields.total_funded || "0");
           const objTokenUri = fields.token_uri || tokenUri;
 
-          // Fetch IPFS metadata
+          // Fetch metadata from the token URI (Walrus/IPFS/http)
           let metadata: Record<string, any> = {};
           try {
             const res = await fetch(String(objTokenUri));

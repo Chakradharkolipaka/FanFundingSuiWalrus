@@ -29,7 +29,7 @@ Or via [Sui Discord](https://discord.gg/sui) `#testnet-faucet` channel.
 - **Blockchain**: Sui (Move)
 - **Frontend**: Next.js 14, React, TailwindCSS, shadcn/ui
 - **Wallet**: @mysten/dapp-kit
-- **Storage**: IPFS via Pinata
+- **Storage**: Walrus (default) with Pinata fallback
 - **Deploy**: Sui CLI
 
 ## 📦 Installation
@@ -64,7 +64,17 @@ sui move test
 NEXT_PUBLIC_PACKAGE_ID=0x...              # Published package ID
 NEXT_PUBLIC_COLLECTION_ID=0x...           # Shared Collection object ID
 NEXT_PUBLIC_SUI_NODE_URL=https://fullnode.testnet.sui.io:443
-PINATA_JWT=...                            # Server-side Pinata JWT
+
+# Storage provider selection: walrus | pinata
+STORAGE_PROVIDER=walrus
+
+# Walrus (server-side)
+WALRUS_PUBLISHER_URL=...
+WALRUS_GATEWAY_BASE_URL=...
+WALRUS_API_KEY=...
+
+# Pinata fallback (server-side)
+PINATA_JWT=...
 
 # zkLogin (Google)
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=...          # Google OAuth client id
@@ -85,6 +95,23 @@ SUI_NETWORK=testnet
 # Optional (only used when ZKLOGIN_PROVER_PROVIDER=docker)
 ZKLOGIN_PROVER_URL=...                    # zkLogin prover base URL, e.g. https://prover.your-domain.com/v1
 ```
+
+## Storage migration notes (Walrus-first)
+
+- Mint media+metadata uploads are now routed through **`POST /api/storage/upload`**.
+- Default provider is **Walrus** (`STORAGE_PROVIDER=walrus`).
+- Pinata remains available as a fallback (`STORAGE_PROVIDER=pinata`).
+- Storage secrets are server-side only; do **not** use any `NEXT_PUBLIC_*` storage secret.
+
+### Rollback
+
+If Walrus is temporarily unavailable, set:
+
+```env
+STORAGE_PROVIDER=pinata
+```
+
+No code changes are required for rollback.
 
 ## zkLogin Authentication
 

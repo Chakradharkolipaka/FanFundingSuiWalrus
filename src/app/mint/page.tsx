@@ -102,7 +102,7 @@ export default function MintPage() {
             {/* Progress Steps */}
             {isProcessing && (
               <div className="flex items-center justify-between text-xs mb-2">
-                {["Upload IPFS", "Sign Tx", "Confirming", "Done"].map((label, i) => (
+                {["Upload Media", "Sign Tx", "Confirming", "Done"].map((label, i) => (
                   <div key={label} className="flex flex-col items-center gap-1">
                     <div
                       className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
@@ -214,7 +214,7 @@ export default function MintPage() {
             >
               {isUploading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading to IPFS...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading media...
                 </>
               ) : isMinting ? (
                 <>

@@ -10,7 +10,7 @@ import { clearAllZkLoginState } from "@/lib/zklogin/zkLoginSession";
 
 /**
  * Hook for minting an NFT on Sui.
- * 1. Uploads image + metadata to IPFS via API route
+ * 1. Uploads image + metadata to decentralized storage via API route
  * 2. Builds a Sui Transaction and signs via connected wallet
  * 3. Waits for transaction confirmation
  */
@@ -55,20 +55,20 @@ export function useMintNFT() {
         setIsConfirmed(false);
         setTxHash(null);
 
-        // ── Step 1: Upload to IPFS ──
+        // ── Step 1: Upload media + metadata ──
         setIsUploading(true);
         toast({
-          title: "📤 Step 1/3: Uploading to IPFS...",
+          title: "📤 Step 1/3: Uploading media...",
           description: "Uploading your image and metadata to decentralized storage.",
         });
-        console.log("[Mint] Step 1: Starting IPFS upload...");
+        console.log("[Mint] Step 1: Starting storage upload...");
 
         const formData = new FormData();
         formData.append("file", file);
         formData.append("name", name);
         formData.append("description", description);
 
-        const uploadRes = await fetch("/api/pinata/upload", {
+        const uploadRes = await fetch("/api/storage/upload", {
           method: "POST",
           body: formData,
         });
@@ -78,14 +78,14 @@ export function useMintNFT() {
           throw new Error(errData.error || `Upload failed (${uploadRes.status})`);
         }
 
-        const { tokenURI } = await uploadRes.json();
-        if (!tokenURI) throw new Error("No token URI returned from IPFS upload");
+  const { metadataUri } = await uploadRes.json();
+  if (!metadataUri) throw new Error("No metadata URI returned from storage upload");
 
         setIsUploading(false);
-        console.log("[Mint] Step 1 complete. Token URI:", tokenURI);
+        console.log("[Mint] Step 1 complete. Metadata URI:", metadataUri);
         toast({
           title: "✅ Step 1/3: Upload Complete",
-          description: `Metadata stored on IPFS. Token URI: ${tokenURI.slice(0, 40)}...`,
+          description: `Metadata stored successfully. URI: ${metadataUri.slice(0, 40)}...`,
         });
 
         // ── Step 2: Build and sign Sui transaction ──
@@ -110,7 +110,7 @@ export function useMintNFT() {
             tx.object(COLLECTION_ID),
             tx.pure.vector("u8", Array.from(encoder.encode(name))),
             tx.pure.vector("u8", Array.from(encoder.encode(description))),
-            tx.pure.vector("u8", Array.from(encoder.encode(tokenURI))),
+            tx.pure.vector("u8", Array.from(encoder.encode(metadataUri))),
           ],
         });
 
