@@ -1,6 +1,52 @@
 import { fetchWithRetry, safeResponseText, StorageProviderError } from "@/lib/storage/http";
 import type { StorageUploadInput, StorageUploadResult } from "@/lib/storage/types";
 
+function readWalrusGatewayBaseUrl(): string {
+  const gateway = process.env.WALRUS_GATEWAY_BASE_URL;
+  if (!gateway) {
+    throw new StorageProviderError("WALRUS_GATEWAY_BASE_URL is not configured", 500);
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(gateway);
+  } catch {
+    throw new StorageProviderError("WALRUS_GATEWAY_BASE_URL must be a valid absolute URL", 500);
+  }
+
+  if (parsed.pathname === "/") {
+    throw new StorageProviderError(
+      "WALRUS_GATEWAY_BASE_URL must include the read API base path (example: https://aggregator.walrus-testnet.dev/v1)",
+      500
+    );
+  }
+
+  return gateway.replace(/\/$/, "");
+}
+
+function readWalrusPublisherUrl(): string {
+  const publisherUrl = process.env.WALRUS_PUBLISHER_URL;
+  if (!publisherUrl) {
+    throw new StorageProviderError("WALRUS_PUBLISHER_URL is not configured", 500);
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(publisherUrl);
+  } catch {
+    throw new StorageProviderError("WALRUS_PUBLISHER_URL must be a valid absolute URL", 500);
+  }
+
+  if (parsed.pathname === "/") {
+    throw new StorageProviderError(
+      "WALRUS_PUBLISHER_URL must be the full upload endpoint path (example: https://publisher.walrus-testnet.dev/v1/store)",
+      500
+    );
+  }
+
+  return publisherUrl;
+}
+
 function normalizeWalrusUri(blobIdOrUrl: string): string {
   if (!blobIdOrUrl) {
     throw new StorageProviderError("Walrus response missing blob identifier", 502);
@@ -8,11 +54,8 @@ function normalizeWalrusUri(blobIdOrUrl: string): string {
   if (blobIdOrUrl.startsWith("http://") || blobIdOrUrl.startsWith("https://")) {
     return blobIdOrUrl;
   }
-  const gateway = process.env.WALRUS_GATEWAY_BASE_URL;
-  if (!gateway) {
-    throw new StorageProviderError("WALRUS_GATEWAY_BASE_URL is not configured", 500);
-  }
-  return `${gateway.replace(/\/$/, "")}/${blobIdOrUrl}`;
+  const gatewayBase = readWalrusGatewayBaseUrl();
+  return `${gatewayBase}/${blobIdOrUrl}`;
 }
 
 function extractWalrusBlobRef(payload: any): string | null {
@@ -32,10 +75,7 @@ function extractWalrusBlobRef(payload: any): string | null {
 }
 
 async function uploadBlob(blob: Blob, filename: string): Promise<string> {
-  const publisherUrl = process.env.WALRUS_PUBLISHER_URL;
-  if (!publisherUrl) {
-    throw new StorageProviderError("WALRUS_PUBLISHER_URL is not configured", 500);
-  }
+  const publisherUrl = readWalrusPublisherUrl();
 
   const apiKey = process.env.WALRUS_API_KEY;
   const form = new FormData();

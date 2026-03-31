@@ -69,12 +69,15 @@ NEXT_PUBLIC_SUI_NODE_URL=https://fullnode.testnet.sui.io:443
 STORAGE_PROVIDER=walrus
 
 # Walrus (server-side)
-WALRUS_PUBLISHER_URL=...
-WALRUS_GATEWAY_BASE_URL=...
+# Must be full upload API path (not just domain root)
+WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.dev/v1/store
+# Used as <base>/<blobId>
+WALRUS_GATEWAY_BASE_URL=https://aggregator.walrus-testnet.dev/v1
 WALRUS_API_KEY=...
 
 # Pinata fallback (server-side)
 PINATA_JWT=...
+STORAGE_WALRUS_FALLBACK_TO_PINATA=true
 
 # zkLogin (Google)
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=...          # Google OAuth client id
