@@ -35,6 +35,33 @@ function withTimeoutSignal(timeoutMs: number) {
   };
 }
 
+function formatErrorDetail(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+
+  const base = error.message || error.name || "unknown error";
+  const cause = (error as Error & { cause?: unknown }).cause;
+  if (!cause) {
+    return base;
+  }
+
+  if (cause instanceof Error) {
+    const code = (cause as Error & { code?: string }).code;
+    return code ? `${base} (cause=${cause.message}, code=${code})` : `${base} (cause=${cause.message})`;
+  }
+
+  if (typeof cause === "object" && cause) {
+    const maybeCode = (cause as { code?: string }).code;
+    const maybeMessage = (cause as { message?: string }).message;
+    if (maybeCode || maybeMessage) {
+      return `${base} (cause=${maybeMessage || "unknown"}, code=${maybeCode || "n/a"})`;
+    }
+  }
+
+  return `${base} (cause=${String(cause)})`;
+}
+
 export async function fetchWithRetry(
   url: string,
   init: RequestInit,
@@ -62,7 +89,8 @@ export async function fetchWithRetry(
         await delay(backoffMs(attempt, baseDelayMs));
         continue;
       }
-      throw new StorageProviderError("Storage upstream unavailable", 502, true);
+  const detail = formatErrorDetail(e);
+      throw new StorageProviderError(`Storage upstream unavailable: ${detail}`, 502, true);
     } finally {
       clear();
     }
