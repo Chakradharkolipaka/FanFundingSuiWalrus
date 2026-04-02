@@ -12,3 +12,8 @@
  ✓ Compiled /api/storage/upload in 2.2s (60 modules)
 [storage.upload] traceId=stor_mnhtknmp_a0658w provider=walrus status=success durationMs=20299
  POST /api/storage/upload 200 in 23239ms
+ ✓ Compiled in 2.7s
+ ✓ Compiled in 15.9s (203 modules)
+ ✓ Compiled in 205ms (203 modules)
+   Reload env: .env.local
+ ✓ Compiled in 581ms (203 modules)

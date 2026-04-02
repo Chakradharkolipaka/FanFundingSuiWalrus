@@ -14,3 +14,7 @@
 [storage.upload] traceId=stor_mnhtae1g_bi5952 provider=pinata status=success durationMs=3341
  POST /api/storage/upload 200 in 4333ms
  ✓ Compiled in 4.4s
+ ✓ Compiled in 14.5s (203 modules)
+ ✓ Compiled in 192ms (203 modules)
+   Reload env: .env.local
+ ✓ Compiled in 638ms (203 modules)

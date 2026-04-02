@@ -35,7 +35,6 @@
     "hardhat.config.js",
     "hardhat.config.cjs",
     "**/frontend/**",
-    "contracts/**",
-    "donation_sui_zk/**"
+    "contracts/**"
   ]
 }
