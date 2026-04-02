@@ -12,6 +12,26 @@ export interface NftData {
   totalDonations: bigint;
 }
 
+function normalizeImageUrl(raw: unknown): string | undefined {
+  if (!raw || typeof raw !== "string") return undefined;
+  const url = raw.trim();
+  if (!url) return undefined;
+
+  if (url.startsWith("ipfs://")) {
+    const cidPath = url.replace("ipfs://", "");
+    return `https://gateway.pinata.cloud/ipfs/${cidPath}`;
+  }
+
+  // Backward compatibility: older metadata may contain /v1/<blobId>.
+  // The current Walrus gateway resolves blobs at /v1/blobs/<blobId>.
+  const walrusV1NoBlobs = url.match(/^(https:\/\/aggregator\.walrus-testnet\.walrus\.space\/v1)\/([^/?#]+)$/i);
+  if (walrusV1NoBlobs) {
+    return `${walrusV1NoBlobs[1]}/blobs/${walrusV1NoBlobs[2]}`;
+  }
+
+  return url;
+}
+
 /**
  * Hook to fetch all NFTs from the Sui contract.
  *
@@ -150,7 +170,8 @@ export function useNFTs() {
 
           const fields = (tokenObj.data.content as any).fields;
           const totalFunded = BigInt(fields.total_funded || "0");
-          const objTokenUri = fields.token_uri || tokenUri;
+          const objTokenUriRaw = fields.token_uri || tokenUri;
+          const objTokenUri = normalizeImageUrl(objTokenUriRaw) || String(objTokenUriRaw);
 
           // Fetch metadata from the token URI (Walrus/IPFS/http)
           let metadata: Record<string, any> = {};
@@ -158,6 +179,16 @@ export function useNFTs() {
             const res = await fetch(String(objTokenUri));
             if (res.ok) {
               metadata = await res.json();
+
+              const resolvedImage =
+                normalizeImageUrl(metadata?.image) ||
+                normalizeImageUrl(metadata?.image_url) ||
+                normalizeImageUrl(metadata?.imageUri) ||
+                normalizeImageUrl(metadata?.thumbnail);
+
+              if (resolvedImage) {
+                metadata.image = resolvedImage;
+              }
             }
           } catch {
             console.warn(`[useNFTs] Failed to fetch metadata for token ${tokenId}`);

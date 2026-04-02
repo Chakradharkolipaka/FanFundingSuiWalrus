@@ -4,6 +4,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'aggregator.walrus-testnet.walrus.space',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'gateway.pinata.cloud',
         pathname: '/**',
       },

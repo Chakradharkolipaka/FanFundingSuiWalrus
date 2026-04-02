@@ -17,3 +17,11 @@
  ✓ Compiled in 205ms (203 modules)
    Reload env: .env.local
  ✓ Compiled in 581ms (203 modules)
+ ✓ Compiled in 687ms (203 modules)
+ ⚠ Found a change in next.config.mjs. Restarting the server to apply the changes...
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3010
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 17.7s
