@@ -1,5 +1,5 @@
-
 import type { StorageUploadInput, StorageUploadResult } from "@/lib/storage/types";
+import { StorageProviderError } from "@/lib/storage/http";
 
 // Runtime validation for env variables
 const publisherUrl = process.env.WALRUS_PUBLISHER_URL;
@@ -15,39 +15,94 @@ if (!gatewayBase || !/^https?:\/\/.+\/.+/.test(gatewayBase)) {
   );
 }
 
+const validatedPublisherUrl = publisherUrl;
+const validatedGatewayBase = gatewayBase;
+const normalizedGatewayBase = validatedGatewayBase.replace(/\/$/, "");
+const gatewayBlobBase = /\/blobs$/i.test(normalizedGatewayBase)
+  ? normalizedGatewayBase
+  : `${normalizedGatewayBase}/blobs`;
+
 /**
  * Uploads a file to Walrus storage and returns StorageUploadResult shape.
  */
 export async function uploadWithWalrus(input: StorageUploadInput): Promise<StorageUploadResult> {
-  // Convert File to Buffer
-  const fileBuffer = Buffer.from(await input.file.arrayBuffer());
-  const contentType = input.file.type || "application/octet-stream";
   const epochs = 5;
-  // Upload image
-  const url = `${publisherUrl}?epochs=${epochs}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": contentType,
-      "Content-Length": String(fileBuffer.length),
-    },
-    body: fileBuffer as any,
-  });
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(`Walrus ${res.status}: ${text.slice(0, 300)}`);
+  const imageBuffer = Buffer.from(await input.file.arrayBuffer());
+  const imageMime = input.file.type || "application/octet-stream";
+
+  const candidateEndpoints = (() => {
+  const normalized = validatedPublisherUrl.replace(/\/$/, "");
+    const set = new Set<string>([normalized]);
+    if (/\/v1\/store$/i.test(normalized)) {
+      set.add(normalized.replace(/\/v1\/store$/i, "/v1/blobs"));
+    }
+    if (/\/v1\/blobs$/i.test(normalized)) {
+      set.add(normalized.replace(/\/v1\/blobs$/i, "/v1/store"));
+    }
+    return Array.from(set);
+  })();
+
+  async function uploadBinary(buffer: Buffer, mime: string): Promise<string> {
+    let lastStatus = 500;
+    let lastBody = "";
+
+    for (const endpoint of candidateEndpoints) {
+      const url = `${endpoint}?epochs=${epochs}`;
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": mime,
+            "Content-Length": String(buffer.length),
+            ...(process.env.WALRUS_API_KEY
+              ? {
+                  Authorization: `Bearer ${process.env.WALRUS_API_KEY}`,
+                }
+              : {}),
+          },
+          body: buffer as any,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new StorageProviderError(`Walrus request failed: ${message}`, 502, true);
+      }
+
+      const rawText = await res.text();
+      if (res.ok) {
+        const payload = JSON.parse(rawText || "{}");
+        const blobId: string =
+          payload?.newlyCreated?.blobObject?.blobId ||
+          payload?.newlyCreated?.blob_object?.blob_id ||
+          payload?.alreadyCertified?.blobId ||
+          payload?.alreadyCertified?.blob_id;
+
+        if (!blobId) {
+          throw new StorageProviderError(`No blobId in response: ${rawText.slice(0, 300)}`, 502);
+        }
+
+        return blobId;
+      }
+
+      lastStatus = res.status;
+  lastBody = rawText.slice(0, 300);
+
+      // Only continue to alternate endpoint on 404.
+      if (res.status !== 404) {
+        break;
+      }
+    }
+
+    throw new StorageProviderError(
+      `Walrus ${lastStatus}: ${lastBody}`,
+      lastStatus,
+      lastStatus === 429 || lastStatus >= 500
+    );
   }
-  const data = JSON.parse(text);
-  const blobId: string =
-    data?.newlyCreated?.blobObject?.blobId ||
-    data?.newlyCreated?.blob_object?.blob_id ||
-    data?.alreadyCertified?.blobId ||
-    data?.alreadyCertified?.blob_id;
-  if (!blobId) {
-    throw new Error("No blobId in response: " + JSON.stringify(data));
-  }
-  const imageUri = `${gatewayBase}/${blobId}`;
-  // Compose metadata
+
+  const imageBlobId = await uploadBinary(imageBuffer, imageMime);
+  const imageUri = `${gatewayBlobBase}/${imageBlobId}`;
+
   const metadata = {
     name: input.name,
     description: input.description,
@@ -55,28 +110,9 @@ export async function uploadWithWalrus(input: StorageUploadInput): Promise<Stora
     attributes: [],
   };
   const metadataBuffer = Buffer.from(JSON.stringify(metadata));
-  const metaRes = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Length": String(metadataBuffer.length),
-    },
-    body: metadataBuffer as any,
-  });
-  const metaText = await metaRes.text();
-  if (!metaRes.ok) {
-    throw new Error(`Walrus metadata upload failed (${metaRes.status}): ${metaText.slice(0, 300)}`);
-  }
-  const metaData = JSON.parse(metaText);
-  const metaBlobId: string =
-    metaData?.newlyCreated?.blobObject?.blobId ||
-    metaData?.newlyCreated?.blob_object?.blob_id ||
-    metaData?.alreadyCertified?.blobId ||
-    metaData?.alreadyCertified?.blob_id;
-  if (!metaBlobId) {
-    throw new Error("No blobId in metadata response: " + JSON.stringify(metaData));
-  }
-  const metadataUri = `${gatewayBase}/${metaBlobId}`;
+  const metaBlobId = await uploadBinary(metadataBuffer, "application/json");
+  const metadataUri = `${gatewayBlobBase}/${metaBlobId}`;
+
   return {
     provider: "walrus",
     imageUri,

@@ -70,9 +70,9 @@ STORAGE_PROVIDER=walrus
 
 # Walrus (server-side)
 # Must be full upload API path (not just domain root)
-WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.dev/v1/store
-# Used as <base>/<blobId>
-WALRUS_GATEWAY_BASE_URL=https://aggregator.walrus-testnet.dev/v1
+WALRUS_PUBLISHER_URL=https://publisher.walrus-testnet.walrus.space/v1/store
+# Blob URLs resolve as <base>/blobs/<blobId>
+WALRUS_GATEWAY_BASE_URL=https://aggregator.walrus-testnet.walrus.space/v1
 WALRUS_API_KEY=...
 
 # Pinata fallback (server-side)

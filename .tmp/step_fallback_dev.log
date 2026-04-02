@@ -1,0 +1,16 @@
+
+> fan-funding-sui@1.0.0 dev
+> next dev -p 3011
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3011
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 4.8s
+ ○ Compiling /api/storage/upload ...
+ ✓ Compiled /api/storage/upload in 689ms (60 modules)
+[storage.upload] traceId=stor_mnhtae1g_bi5952 provider=walrus status=fallback reason=Walrus request failed: fetch failed
+[storage.upload] traceId=stor_mnhtae1g_bi5952 provider=pinata status=success durationMs=3341
+ POST /api/storage/upload 200 in 4333ms
+ ✓ Compiled in 4.4s

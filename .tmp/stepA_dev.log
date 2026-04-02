@@ -1,0 +1,14 @@
+
+> fan-funding-sui@1.0.0 dev
+> next dev -p 3010
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3010
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 8.7s
+ ○ Compiling /api/storage/upload ...
+ ✓ Compiled /api/storage/upload in 2.2s (60 modules)
+[storage.upload] traceId=stor_mnhtknmp_a0658w provider=walrus status=success durationMs=20299
+ POST /api/storage/upload 200 in 23239ms
